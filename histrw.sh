@@ -1,7 +1,21 @@
 #!/bin/bash
 
-# SAVEFILE="/vagrant/$(hostname)_histrw.txt"
-SAVEFILE="/home/kooky/$(hostname)_histrw.txt"
+# Usage:
+#   `history | histrw.sh`
+#   `history | histrw.sh 10`
+#   `history | histrw.sh "# Comment"`
+
+# Add aliases:
+#   1. mkdir -v "$HOME/bin"
+#   2. copy 
+#   3. ln -s $HOME/bin/histrw.sh $HOME/bin/add
+#   4. nano alias_add.bash
+#   5. alias add="history | addd"
+#   6. source alias_add.bash
+
+SAVEFILE="$HOME/$(hostname)_histrw.txt"
+
+### CUSTOM ERROR MESSAGES
 ERROR_UNWRITABLE_SAVEFILE="Error: Cannot write to ${SAVEFILE}"
 ERROR_UNABLE_CREATE="Error: Unable to create ${SAVEFILE}"
 ERROR_NO_INPUT="Error: No input pipeline data. Please use | to pass data to this script."
@@ -16,7 +30,7 @@ process_pipe() {
             exit 1
         elif [[ "$1" =~ ^#.+$ ]]; then
             if printf "    %s\n" "$1" >>"${SAVEFILE}"; then
-                echo "New comment: $1"
+                echo "$SAVEFILE --> New comment: $1"
                 exit 0
             else
                 echo "${ERROR_UNWRITABLE_SAVEFILE}"
@@ -39,7 +53,7 @@ process_pipe() {
         fi
 
         if echo "$ps_line" >>"${SAVEFILE}"; then
-            echo "New record: $ps_line"
+            echo "$SAVEFILE --> New record: $ps_line"
         else
             echo "${ERROR_UNWRITABLE_SAVEFILE}"
             exit 1
