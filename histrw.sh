@@ -1,24 +1,16 @@
 #!/bin/bash
 
-# Usage:
-#   `history | histrw.sh`
-#   `history | histrw.sh 10`
-#   `history | histrw.sh "# Comment"`
-
-# Add aliases:
-#   1. mkdir -v "$HOME/bin"
-#   2. copy 
-#   3. ln -s $HOME/bin/histrw.sh $HOME/bin/add
-#   4. nano alias_add.bash
-#   5. alias add="history | addd"
-#   6. source alias_add.bash
-
 SAVEFILE="$HOME/$(hostname)_histrw.txt"
 
-### CUSTOM ERROR MESSAGES
+## CUSTOM ERROR MESSAGES
 ERROR_UNWRITABLE_SAVEFILE="Error: Cannot write to ${SAVEFILE}"
 ERROR_UNABLE_CREATE="Error: Unable to create ${SAVEFILE}"
-ERROR_NO_INPUT="Error: No input pipeline data. Please use | to pass data to this script."
+ERROR_NO_INPUT='Usage:
+  history | histrw.sh              <-- writes the last bash input command to a text file
+  history | histrw.sh 10           <-- writes the numbered command to a text file
+  history | histrw.sh "# Comment"  <-- adds custom comment to a text file
+  
+Customise the SAVEFILE variable of the script to specify path to a text file'
 ERROR_NOT_INTEGER="Error: Command number must be an integer OR be a '#comment_line' (in single quotes with starting hashtag)."
 ERROR_COMMAND_NOT_FOUND="Error: Command with number %d not found in history.\n"
 ERROR_TOO_MANY_ARGS="Error: Too many arguments."
@@ -30,7 +22,7 @@ process_pipe() {
             exit 1
         elif [[ "$1" =~ ^#.+$ ]]; then
             if printf "    %s\n" "$1" >>"${SAVEFILE}"; then
-                echo "$SAVEFILE --> New comment: $1"
+                echo -e "\033[0;31mNew comment:\033[0m $1"
                 exit 0
             else
                 echo "${ERROR_UNWRITABLE_SAVEFILE}"
@@ -39,7 +31,7 @@ process_pipe() {
         fi
 
         while IFS= read -r line; do
-            # Remove initial spaces
+            ## Remove initial spaces
             ps_line=$(echo "$line" | awk -v num="$1" '$1 == num { $1 = ""; sub(/^[ \t]+/, ""); print }')
             if [ -n "$ps_line" ]; then
                 break
@@ -53,7 +45,7 @@ process_pipe() {
         fi
 
         if echo "$ps_line" >>"${SAVEFILE}"; then
-            echo "$SAVEFILE --> New record: $ps_line"
+            echo -e "\033[0;31mNew record:\033[0m $ps_line"
         else
             echo "${ERROR_UNWRITABLE_SAVEFILE}"
             exit 1
@@ -69,7 +61,7 @@ process_pipe() {
         ps_line=$(echo "$prev_line" | awk '{$1=""; sub(/^[ \t]+/, ""); print}')
 
         if echo "$ps_line" >>"${SAVEFILE}"; then
-            echo "New record: $ps_line"
+            echo -e "\033[0;31mNew record:\033[0m $ps_line"
         else
             echo "${ERROR_UNWRITABLE_SAVEFILE}"
             exit 1
@@ -77,7 +69,7 @@ process_pipe() {
     fi
 }
 
-# main
+## Starts main programm
 if [ ! -f "${SAVEFILE}" ]; then
     touch "${SAVEFILE}" || {
         echo "${ERROR_UNABLE_CREATE}"
@@ -91,18 +83,19 @@ if [ ! -w "${SAVEFILE}" ]; then
     exit 1
 fi
 
-# Check if there is input data via pipeline
+## Pipeline processing
 if [ -t 0 ]; then
+    ## Check if there is input data via pipeline
     echo "${ERROR_NO_INPUT}"
     exit 1
 fi
 
 if [ $# -eq 1 ]; then
-    # Если передан номер команды как аргумент, извлекаем эту команду
+    ## If a command number is passed as an argument, extracts command under this number
     process_pipe "$*"
     exit 0
 elif [ $# -eq 0 ]; then
-    # Если не передан номер команды, обрабатываем данные из входного потока
+    ## If no command number is passed, extracts the last command
     process_pipe
     exit 0
 else
