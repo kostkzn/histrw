@@ -12,9 +12,9 @@ A simple utility to save selected commands from your Bash history to a text file
 ## Installation
 
 ```bash
-git clone git@github.com:kostkzn/histrw.git
+git clone https://github.com/kostkzn/histrw.git
 cd histrw
-./alias_add.sh
+source ./alias_add.sh
 ```
 
 This will:
